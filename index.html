@@ -143,20 +143,21 @@
   /* ============ GARAGE / COLLECTION ============ */
   .garage{background:var(--carbon)}
   .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px}
-  .card{position:relative;height:0;padding-bottom:133%;cursor:pointer;
+  .card{position:relative;cursor:pointer;perspective:1600px;height:0;padding-bottom:133%;
     transition:transform .4s cubic-bezier(.2,.8,.2,1)}
   .card:hover{transform:translateY(-8px)}
-  .card-inner{position:absolute;inset:0;width:100%;height:100%}
+  .card-inner{position:absolute;inset:0;width:100%;height:100%;
+    transition:transform .7s cubic-bezier(.2,.85,.3,1);transform-style:preserve-3d}
+  .card.flipped .card-inner{transform:rotateY(180deg)}
   .face{position:absolute;inset:0;border:1px solid var(--line);overflow:hidden;background:#0d0e10;
-    transition:opacity .45s ease;}
-  .face.front{display:flex;flex-direction:column;opacity:1;z-index:2;
+    backface-visibility:hidden;-webkit-backface-visibility:hidden}
+  .face.front{display:flex;flex-direction:column;
     transition:border-color .35s ease, box-shadow .35s ease}
   .card:hover .face.front{border-color:var(--card-accent);
     box-shadow:0 18px 50px -20px var(--card-accent)}
-  .face.back{opacity:0;z-index:1;display:flex;flex-direction:column;justify-content:space-between;padding:32px 28px;
-    border-color:var(--card-accent);pointer-events:none}
-  .card.flipped .face.front{opacity:0;z-index:1;pointer-events:none}
-  .card.flipped .face.back{opacity:1;z-index:2;pointer-events:auto}
+  .face.back{transform:rotateY(180deg);
+    display:flex;flex-direction:column;justify-content:space-between;gap:8px;padding:26px 24px;
+    border-color:var(--card-accent);overflow-y:auto}
   .card-img{flex:1;background-size:contain;background-repeat:no-repeat;background-position:center;transition:transform .7s ease}
   .card:hover .card-img{transform:scale(1.03)}
   .face.front::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
@@ -174,11 +175,11 @@
   .card:hover .card-meta{border-top-color:var(--card-accent)}
 
   .back-top .marque{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--card-accent)}
-  .back-top h3{font-family:var(--display);font-weight:800;font-style:italic;font-size:30px;text-transform:uppercase;line-height:1;margin:4px 0 22px}
-  .spec{display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--line);font-size:14px}
+  .back-top h3{font-family:var(--display);font-weight:800;font-style:italic;font-size:28px;text-transform:uppercase;line-height:1;margin:4px 0 16px}
+  .spec{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line);font-size:14px}
   .spec span:first-child{color:var(--silver);font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase}
   .spec span:last-child{font-weight:600}
-  .price{font-family:var(--display);font-weight:800;font-style:italic;font-size:24px;text-transform:uppercase;letter-spacing:.5px;margin:18px 0 16px;color:var(--card-accent)}
+  .price{font-family:var(--display);font-weight:800;font-style:italic;font-size:22px;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 14px;color:var(--card-accent)}
   .price small{font-family:var(--mono);font-size:11px;color:var(--silver);font-weight:400;font-style:normal;text-transform:none;letter-spacing:1px;display:block;margin-top:4px}
 
   /* ============ DETAIL / CRAFT ============ */
@@ -617,10 +618,25 @@
   },{threshold:.15});
   document.querySelectorAll('.reveal').forEach(function(el){revObserver.observe(el);});
 
-  /* card flip */
+  /* card flip - grows card to fit spec sheet so nothing is cut off */
   document.querySelectorAll('.card').forEach(function(c){
+    var back=c.querySelector('.face.back');
     c.addEventListener('click',function(ev){
       if(ev.target.closest('a'))return;     /* let buttons work */
+      var willFlip=!c.classList.contains('flipped');
+      if(willFlip && back){
+        /* measure the back's natural content height and ensure the card is at least that tall */
+        var needed=back.scrollHeight;
+        var current=c.offsetHeight;
+        if(needed>current){
+          c.style.paddingBottom='0';
+          c.style.height=needed+'px';
+        }
+      }else{
+        /* reset to portrait image height */
+        c.style.height='';
+        c.style.paddingBottom='';
+      }
       c.classList.toggle('flipped');
     });
   });
